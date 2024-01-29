@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #1f1f1f;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+      background-color: #282c34;
+    }
+
+    #gameOverMessage {
+      display: none;
+      position: absolute;
+      font-size: 24px;
+      color: red;
+    }
+  </style>
+  <title>Snake Game</title>
+</head>
+<body>
+  <h1 style="text-align: center;">Snake Game</h1>
+  <canvas id="snakeCanvas" width="400" height="400"></canvas>
+  <div id="gameOverMessage">Game Over! Press Space to Restart</div>
+
+  <script>
+    const canvas = document.getElementById('snakeCanvas');
+    const ctx = canvas.getContext('2d');
+    const gameOverMessage = document.getElementById('gameOverMessage');
+
+    const boxSize = 20;
+    let snake = [{ x: 10, y: 10 }];
+    let direction = 'right';
+    let food = { x: 15, y: 15 };
+    let gameRunning = true;
+
+    function draw() {
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the snake
+      ctx.fillStyle = '#50C878';
+      snake.forEach(segment => {
+        ctx.fillRect(segment.x * boxSize, segment.y * boxSize, boxSize, boxSize);
+        ctx.strokeStyle = '#1f1f1f';
+        ctx.strokeRect(segment.x * boxSize, segment.y * boxSize, boxSize, boxSize);
+      });
+
+      // Draw the food
+      ctx.fillStyle = '#FF6347';
+      ctx.fillRect(food.x * boxSize, food.y * boxSize, boxSize, boxSize);
+    }
+
+    function update() {
+      if (!gameRunning) {
+        return;
+      }
+
+      // Move the snake
+      let newHead = { x: snake[0].x, y: snake[0].y };
+      switch (direction) {
+        case 'up':
+          newHead.y--;
+          break;
+        case 'down':
+          newHead.y++;
+          break;
+        case 'left':
+          newHead.x--;
+          break;
+        case 'right':
+          newHead.x++;
+          break;
+      }
+
+      // Check if the snake eats the food
+      if (newHead.x === food.x && newHead.y === food.y) {
+        // Generate new food
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / boxSize)),
+          y: Math.floor(Math.random() * (canvas.height / boxSize))
+        };
+        // Add a new segment to the snake
+        snake.push({});
+      } 
+
+      // Check if the snake collides with the canvas boundaries
+      if (
+        newHead.x < 0 || newHead.x >= canvas.width / boxSize ||
+        newHead.y < 0 || newHead.y >= canvas.height / boxSize
+      ) {
+        // Game over
+        endGame();
+      }
+
+      // Check if the snake collides with itself
+      if (checkCollision(newHead, snake.slice(1))) {
+        // Game over
+        endGame();
+      }
+
+      // Update the positions of the snake segments
+      for (let i = snake.length - 1; i > 0; i--) {
+        snake[i] = { ...snake[i - 1] };
+      }
+      snake[0] = newHead;
+    }
+
+    function checkCollision(head, array) {
+      return array.some(segment => segment.x === head.x && segment.y === head.y);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      gameOverMessage.style.display = 'block';
+    }
+
+    function resetGame() {
+      snake = [{ x: 10, y: 10 }];
+      direction = 'right';
+      food = { x: 15, y: 15 };
+      gameRunning = true;
+      gameOverMessage.style.display = 'none';
+    }
+
+    function gameLoop() {
+      draw();
+      update();
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (!gameRunning && event.key === ' ') {
+        resetGame();
+      }
+
+      switch (event.key) {
+        case 'ArrowUp':
+          if (direction !== 'down') direction = 'up';
+          break;
+        case 'ArrowDown':
+          if (direction !== 'up') direction = 'down';
+          break;
+        case 'ArrowLeft':
+          if (direction !== 'right') direction = 'left';
+          break;
+        case 'ArrowRight':
+          if (direction !== 'left') direction = 'right';
+          break;
+      }
+    });
+
+    setInterval(gameLoop, 100); // Update every 100 milliseconds
+  </script>
+</body>
+</html>
